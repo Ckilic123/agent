@@ -40,14 +40,14 @@
     /* Use a responsive grid for dashboard cards */
     .dashboard-grid {
       display: grid;
-      /* Two columns: wider left for news/events and narrower right for stocks/weather */
+      /* Two columns: left column for news and right column for weather/events */
       grid-template-columns: 2fr 1fr;
-      /* Layout: news occupies left column for two rows, stocks top right,
-         weather middle right, events full width below, chat bubble floats separately */
+      /* Top row spans both columns for stocks similar to Bloomberg's top securities bar,
+         second row places news and weather, third row places news and events */
       grid-template-areas:
-        "news stocks"
+        "stocks stocks"
         "news weather"
-        "events events";
+        "news events";
       gap: 1.5rem;
     }
 
@@ -151,7 +151,27 @@
       white-space: pre-line;
       color: #24292e;
     }
-    /* News list styles */
+    /* News styles */
+    .news-hero {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 1rem;
+    }
+    .news-hero img {
+      width: 100%;
+      height: auto;
+      border-radius: 10px;
+    }
+    .news-hero a {
+      margin-top: 0.5rem;
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #0a57d2;
+      text-decoration: none;
+    }
+    .news-hero a:hover {
+      text-decoration: underline;
+    }
     .news-list {
       display: flex;
       flex-direction: column;
@@ -171,8 +191,8 @@
       background-color: #f0f0f0;
     }
     .news-item img {
-      width: 140px;
-      height: 90px;
+      width: 160px;
+      height: 100px;
       object-fit: cover;
       border-radius: 6px;
       flex-shrink: 0;
@@ -224,6 +244,26 @@
     }
     li {
       margin-bottom: 0.4rem;
+    }
+
+    /* Stocks list styling to appear horizontally like top securities bar */
+    #stocks-content ul {
+      display: flex;
+      gap: 1rem;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    #stocks-content li {
+      background-color: #fafafa;
+      border: 1px solid #e1e4e8;
+      border-radius: 8px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      min-width: 100px;
     }
     a {
       color: #58a6ff;
@@ -370,6 +410,24 @@
           articles = data;
         }
         if (articles.length) {
+          container.innerHTML = '';
+          // Display the first article as a hero card with large image and headline
+          const first = articles.shift();
+          if (first) {
+            const heroEl = document.createElement('div');
+            heroEl.className = 'news-hero';
+            const heroImg = document.createElement('img');
+            heroImg.src = first.image || 'https://picsum.photos/800/400?random';
+            heroImg.alt = first.title || first.story_title || 'Hero image';
+            const heroLink = document.createElement('a');
+            heroLink.href = first.url || first.story_url || first.link || '#';
+            heroLink.target = '_blank';
+            heroLink.textContent = first.title || first.story_title || first.headline || 'Untitled';
+            heroEl.appendChild(heroImg);
+            heroEl.appendChild(heroLink);
+            container.appendChild(heroEl);
+          }
+          // Create list for remaining articles
           const listEl = document.createElement('div');
           listEl.className = 'news-list';
           articles.forEach((item) => {
@@ -391,7 +449,6 @@
             wrapper.appendChild(contentDiv);
             listEl.appendChild(wrapper);
           });
-          container.innerHTML = '';
           container.appendChild(listEl);
         } else {
           container.textContent = 'No news found';
