@@ -12,55 +12,61 @@
     crossorigin="anonymous"
     referrerpolicy="no-referrer"
   />
-  <!-- Modern styling for a clean, responsive dashboard -->
+  <!-- Modern dark theme styling inspired by Bloomberg -->
   <style>
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       margin: 0;
       padding: 0;
-      background-color: #f0f2f5;
-      color: #333;
+      background-color: #0d1117; /* dark background */
+      color: #c9d1d9; /* light text */
       line-height: 1.5;
     }
     h1 {
       text-align: center;
       padding: 1.5rem 1rem;
       margin: 0;
-      background: linear-gradient(90deg, #4a90e2, #6fb1ff);
-      color: #fff;
-      font-size: 2rem;
+      background-color: #010409; /* darker header */
+      color: #58a6ff; /* accent color */
+      font-size: 2.2rem;
+      border-bottom: 1px solid #21262d;
     }
     .container {
-      max-width: 960px;
+      max-width: 1100px;
       margin: 2rem auto;
       padding: 0 1.5rem;
     }
     /* Use a responsive grid for dashboard cards */
     .dashboard-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 1.5rem;
     }
     .section {
-      background: #fff;
+      background-color: #161b22; /* dark card */
       padding: 1.25rem 1.5rem;
       border-radius: 12px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
+      border: 1px solid #30363d;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .section:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(20, 25, 31, 0.5);
     }
     .section h2 {
       margin-top: 0;
-      font-size: 1.25rem;
+      font-size: 1.3rem;
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      color: #4a90e2;
-      border-bottom: 1px solid #eaeaea;
+      color: #58a6ff;
+      border-bottom: 1px solid #30363d;
       padding-bottom: 0.5rem;
       margin-bottom: 1rem;
     }
     /* Icons within section headings */
     .section h2 i {
-      color: #4a90e2;
+      color: #58a6ff;
     }
     /* AI chat styles */
     #ai-chat {
@@ -69,32 +75,72 @@
     }
     #ai-chat input {
       padding: 0.6rem 0.75rem;
-      border: 1px solid #ccc;
+      border: 1px solid #30363d;
+      background-color: #0d1117;
+      color: #c9d1d9;
       border-radius: 6px;
       margin-bottom: 0.75rem;
       font-size: 1rem;
+    }
+    #ai-chat input:focus {
+      outline: none;
+      border-color: #58a6ff;
     }
     #ai-chat button {
       align-self: flex-start;
       padding: 0.6rem 1.2rem;
       border: none;
       border-radius: 6px;
-      background-color: #4a90e2;
+      background-color: #238636; /* green accent for send */
       color: #fff;
       cursor: pointer;
       font-size: 1rem;
       transition: background 0.2s ease;
     }
     #ai-chat button:hover {
-      background-color: #357ab8;
+      background-color: #2ea043;
     }
     #chat-log {
       margin-top: 0.75rem;
       padding: 0.75rem;
-      background-color: #f7f8fa;
+      background-color: #0d1117;
+      border: 1px solid #30363d;
       border-radius: 6px;
       min-height: 3rem;
       white-space: pre-line;
+    }
+    /* News list styles */
+    .news-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .news-item {
+      display: flex;
+      gap: 0.75rem;
+      border-bottom: 1px solid #30363d;
+      padding-bottom: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    .news-item:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    .news-item img {
+      width: 70px;
+      height: 45px;
+      object-fit: cover;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    .news-item a {
+      color: #58a6ff;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .news-item a:hover {
+      text-decoration: underline;
     }
     ul {
       padding-left: 1.2rem;
@@ -104,7 +150,7 @@
       margin-bottom: 0.4rem;
     }
     a {
-      color: #357ab8;
+      color: #58a6ff;
       text-decoration: none;
     }
     a:hover {
@@ -183,9 +229,11 @@
           data.forEach(item => {
             // Support for multiple data structures
             const symbol = item.symbol || item['01. symbol'] || item['01. Symbol'] || item.ticker;
-            const price = item.price || item['05. price'] || item['05. Price'] || item.close;
+            let price = item.price || item['05. price'] || item['05. Price'] || item.close;
+            // Display N/A if the price is null or undefined (e.g. markets closed)
+            const displayPrice = price != null && price !== undefined ? price : 'N/A';
             const li = document.createElement('li');
-            li.textContent = `${symbol}: ${price}`;
+            li.textContent = `${symbol}: ${displayPrice}`;
             list.appendChild(li);
           });
           container.innerHTML = '';
@@ -214,20 +262,30 @@
           articles = data;
         }
         if (articles.length) {
-          const list = document.createElement('ul');
-          articles.forEach(item => {
+          // Create a flexible list of news items with images
+          const listEl = document.createElement('div');
+          listEl.className = 'news-list';
+          articles.forEach((item) => {
             const title = item.title || item.story_title || item.headline;
             const url = item.url || item.story_url || item.link;
-            const li = document.createElement('li');
+            const image = item.image || 'https://source.unsplash.com/featured/400x200?news';
+            const wrapper = document.createElement('div');
+            wrapper.className = 'news-item';
+            const imgEl = document.createElement('img');
+            imgEl.src = image;
+            imgEl.alt = title;
+            const contentDiv = document.createElement('div');
             const a = document.createElement('a');
             a.href = url || '#';
             a.target = '_blank';
             a.textContent = title || 'Untitled';
-            li.appendChild(a);
-            list.appendChild(li);
+            contentDiv.appendChild(a);
+            wrapper.appendChild(imgEl);
+            wrapper.appendChild(contentDiv);
+            listEl.appendChild(wrapper);
           });
           container.innerHTML = '';
-          container.appendChild(list);
+          container.appendChild(listEl);
         } else {
           container.textContent = 'No news found';
         }
