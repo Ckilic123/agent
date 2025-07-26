@@ -39,9 +39,22 @@
     /* Use a responsive grid for dashboard cards */
     .dashboard-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      /* Define two columns with a wider right column for the news panel */
+      grid-template-columns: 1.2fr 2fr;
+      /* Define grid areas so we can easily position sections.  The news
+         spans two rows while the chat spans both columns on the bottom. */
+      grid-template-areas:
+        "weather news"
+        "stocks  news"
+        "chat    chat";
       gap: 1.5rem;
     }
+
+    /* Assign each section to its grid area */
+    #weather { grid-area: weather; }
+    #stocks  { grid-area: stocks; }
+    #news    { grid-area: news; }
+    #chat    { grid-area: chat; }
     .section {
       background-color: #161b22; /* dark card */
       padding: 1.25rem 1.5rem;
@@ -129,8 +142,8 @@
       background-color: #161b22;
     }
     .news-item img {
-      width: 100px;
-      height: 60px;
+      width: 120px;
+      height: 75px;
       object-fit: cover;
       border-radius: 6px;
       flex-shrink: 0;
