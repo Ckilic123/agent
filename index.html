@@ -12,41 +12,42 @@
     crossorigin="anonymous"
     referrerpolicy="no-referrer"
   />
-  <!-- Modern dark theme styling inspired by Bloomberg -->
+  <!-- Modern light theme styling inspired by Bloomberg -->
   <style>
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+        'Helvetica Neue', Arial, sans-serif;
       margin: 0;
       padding: 0;
-      background-color: #0d1117; /* dark background */
-      color: #c9d1d9; /* light text */
+      background-color: #f5f5f5; /* light background */
+      color: #24292e; /* dark text */
       line-height: 1.5;
     }
     h1 {
       text-align: center;
       padding: 1.5rem 1rem;
       margin: 0;
-      background-color: #010409; /* darker header */
-      color: #58a6ff; /* accent color */
-      font-size: 2.2rem;
-      border-bottom: 1px solid #21262d;
+      background-color: #ffffff;
+      color: #0a57d2; /* blue accent */
+      font-size: 2.4rem;
+      border-bottom: 1px solid #e1e4e8;
     }
     .container {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 2rem auto;
       padding: 0 1.5rem;
     }
     /* Use a responsive grid for dashboard cards */
     .dashboard-grid {
       display: grid;
-      /* Define two columns with a wider right column for the news panel */
-      grid-template-columns: 1.2fr 2fr;
-      /* Define grid areas so we can easily position sections.  The news
-         spans two rows while the chat spans both columns on the bottom. */
+      /* Two columns: wider left for news/events and narrower right for stocks/weather */
+      grid-template-columns: 2fr 1fr;
+      /* Layout: news occupies left column for two rows, stocks top right,
+         weather middle right, events full width below, chat bubble floats separately */
       grid-template-areas:
-        "weather news"
-        "stocks  news"
-        "chat    chat";
+        "news stocks"
+        "news weather"
+        "events events";
       gap: 1.5rem;
     }
 
@@ -54,17 +55,17 @@
     #weather { grid-area: weather; }
     #stocks  { grid-area: stocks; }
     #news    { grid-area: news; }
-    #chat    { grid-area: chat; }
+    #events  { grid-area: events; }
     .section {
-      background-color: #161b22; /* dark card */
+      background-color: #ffffff; /* light card */
       padding: 1.25rem 1.5rem;
       border-radius: 12px;
-      border: 1px solid #30363d;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      border: 1px solid #e1e4e8;
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
     }
     .section:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 6px 20px rgba(20, 25, 31, 0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
     .section h2 {
       margin-top: 0;
@@ -72,8 +73,8 @@
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      color: #58a6ff;
-      border-bottom: 1px solid #30363d;
+      color: #0a57d2;
+      border-bottom: 1px solid #e1e4e8;
       padding-bottom: 0.5rem;
       margin-bottom: 1rem;
     }
@@ -81,46 +82,74 @@
     .section h2 i {
       color: #58a6ff;
     }
-    /* AI chat styles */
-    #ai-chat {
-      display: flex;
-      flex-direction: column;
+    /* Styles for collapsible chat bubble */
+    #chat-container {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 1000;
     }
-    #ai-chat input {
-      padding: 0.6rem 0.75rem;
-      border: 1px solid #30363d;
-      background-color: #0d1117;
-      color: #c9d1d9;
+    #chat-bubble-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background-color: #0a57d2;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      border: none;
+      font-size: 1.5rem;
+    }
+    #chat-window {
+      display: none;
+      flex-direction: column;
+      position: absolute;
+      bottom: 70px;
+      right: 0;
+      width: 320px;
+      background-color: #ffffff;
+      border: 1px solid #e1e4e8;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 1rem;
+    }
+    #chat-window input {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #d0d7de;
       border-radius: 6px;
       margin-bottom: 0.75rem;
-      font-size: 1rem;
+      font-size: 0.95rem;
     }
-    #ai-chat input:focus {
+    #chat-window input:focus {
       outline: none;
-      border-color: #58a6ff;
+      border-color: #0a57d2;
     }
-    #ai-chat button {
+    #chat-window button {
       align-self: flex-start;
-      padding: 0.6rem 1.2rem;
+      padding: 0.5rem 1rem;
       border: none;
       border-radius: 6px;
-      background-color: #238636; /* green accent for send */
+      background-color: #0a57d2;
       color: #fff;
       cursor: pointer;
-      font-size: 1rem;
+      font-size: 0.95rem;
       transition: background 0.2s ease;
     }
-    #ai-chat button:hover {
-      background-color: #2ea043;
+    #chat-window button:hover {
+      background-color: #0945a7;
     }
     #chat-log {
-      margin-top: 0.75rem;
-      padding: 0.75rem;
-      background-color: #0d1117;
-      border: 1px solid #30363d;
+      margin-top: 0.5rem;
+      padding: 0.5rem;
+      background-color: #f5f5f5;
+      border: 1px solid #e1e4e8;
       border-radius: 6px;
       min-height: 3rem;
       white-space: pre-line;
+      color: #24292e;
     }
     /* News list styles */
     .news-list {
@@ -133,23 +162,23 @@
       align-items: center;
       gap: 1rem;
       padding: 0.75rem;
-      border: 1px solid #30363d;
+      border: 1px solid #e1e4e8;
       border-radius: 10px;
-      background-color: #0d1117;
+      background-color: #fafafa;
       transition: background-color 0.2s ease;
     }
     .news-item:hover {
-      background-color: #161b22;
+      background-color: #f0f0f0;
     }
     .news-item img {
-      width: 120px;
-      height: 75px;
+      width: 140px;
+      height: 90px;
       object-fit: cover;
       border-radius: 6px;
       flex-shrink: 0;
     }
     .news-item a {
-      color: #58a6ff;
+      color: #0a57d2;
       font-weight: 600;
       text-decoration: none;
       display: block;
@@ -157,6 +186,37 @@
     }
     .news-item a:hover {
       text-decoration: underline;
+    }
+
+    /* Events list styles */
+    .events-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+    .event-item {
+      padding: 0.75rem;
+      border: 1px solid #e1e4e8;
+      border-radius: 10px;
+      background-color: #fafafa;
+      transition: background-color 0.2s ease;
+    }
+    .event-item:hover {
+      background-color: #f0f0f0;
+    }
+    .event-item .event-title {
+      font-weight: 600;
+      color: #0a57d2;
+      margin: 0;
+    }
+    .event-item .event-meta {
+      font-size: 0.85rem;
+      color: #57606a;
+      margin: 0.25rem 0;
+    }
+    .event-item .event-desc {
+      margin: 0;
+      color: #24292e;
     }
     ul {
       padding-left: 1.2rem;
@@ -179,25 +239,31 @@
   <div class="container">
     <!-- Dashboard grid holds each section in a responsive layout -->
     <div class="dashboard-grid">
-      <div id="weather" class="section">
-        <h2><i class="fas fa-cloud"></i> Weather</h2>
-        <div id="weather-content">Loading...</div>
+      <div id="news" class="section">
+        <h2><i class="fas fa-newspaper"></i> News</h2>
+        <div id="news-content">Loading...</div>
       </div>
       <div id="stocks" class="section">
         <h2><i class="fas fa-chart-line"></i> Stocks</h2>
         <div id="stocks-content">Loading...</div>
       </div>
-      <div id="news" class="section">
-        <h2><i class="fas fa-newspaper"></i> News</h2>
-        <div id="news-content">Loading...</div>
+      <div id="weather" class="section">
+        <h2><i class="fas fa-cloud-sun"></i> Weather <span id="weather-city"></span></h2>
+        <div id="weather-content">Loading...</div>
       </div>
-      <div id="chat" class="section">
-        <h2><i class="fas fa-robot"></i> AI Chat</h2>
-        <div id="ai-chat">
-          <input id="ai-input" type="text" placeholder="Ask something..." />
-          <button onclick="sendToAI()">Send</button>
-          <div id="chat-log"></div>
-        </div>
+      <div id="events" class="section">
+        <h2><i class="fas fa-calendar-alt"></i> Weekend in Munich</h2>
+        <div id="events-content">Loading...</div>
+      </div>
+    </div>
+    <!-- Chat bubble container -->
+    <div id="chat-container">
+      <button id="chat-bubble-btn" onclick="toggleChat()"><i class="fas fa-comments"></i></button>
+      <div id="chat-window">
+        <h3 style="margin-top:0; margin-bottom:0.5rem; color:#0a57d2; display:flex; align-items:center; gap:0.4rem;"><i class="fas fa-robot"></i> AI Chat</h3>
+        <input id="ai-input" type="text" placeholder="Ask something..." />
+        <button onclick="sendToAI()">Send</button>
+        <div id="chat-log"></div>
       </div>
     </div>
   </div>
@@ -205,35 +271,53 @@
     // Fetch weather data from the API and present it nicely
     async function loadWeather() {
       const container = document.getElementById('weather-content');
+      const cityEl = document.getElementById('weather-city');
       try {
         container.textContent = 'Loading...';
         const res = await fetch('/api/weather');
         const data = await res.json();
-        // Expecting combined data with current and additional info
-        if (data.current) {
-          const { temperature, windspeed, wind_direction, weathercode } = data.current;
-          container.innerHTML = `
-            <p><strong>Temperature:</strong> ${temperature}°C</p>
-            <p><strong>Wind Speed:</strong> ${windspeed} km/h</p>
-            <p><strong>Wind Direction:</strong> ${wind_direction}°</p>
-            <p><strong>Weather Code:</strong> ${weathercode}</p>
-          `;
-        } else if (data.temperature_2m) {
-          // Fallback for open-meteo current structure
-          container.innerHTML = `
-            <p><strong>Temperature:</strong> ${data.temperature_2m}°C</p>
-            <p><strong>Wind Speed:</strong> ${data.wind_speed_10m || data.wind_speed} km/h</p>
-            <p><strong>Relative Humidity:</strong> ${data.relative_humidity_2m || ''}</p>
-          `;
-        } else {
-          container.textContent = JSON.stringify(data, null, 2);
+        // Display city name if provided
+        if (data.city) {
+          cityEl.textContent = `(${data.city})`;
         }
+        const current = data.current || {};
+        // Build current weather HTML
+        let html = '';
+        if (current.temperature != null) {
+          html += `<p><strong>Temperature:</strong> ${current.temperature}°C</p>`;
+        }
+        if (current.windspeed != null) {
+          html += `<p><strong>Wind Speed:</strong> ${current.windspeed} km/h</p>`;
+        }
+        if (current.wind_direction != null) {
+          html += `<p><strong>Wind Direction:</strong> ${current.wind_direction}°</p>`;
+        }
+        if (current.weathercode != null) {
+          html += `<p><strong>Weather Code:</strong> ${current.weathercode}</p>`;
+        }
+        // Build 5‑day forecast list
+        if (data.daily && Array.isArray(data.daily.time)) {
+          html += '<h4 style="margin-top:1rem; margin-bottom:0.5rem; color:#0a57d2;">5‑day Forecast</h4>';
+          html += '<ul style="list-style:none; padding:0; margin:0;">';
+          const times = data.daily.time;
+          const maxs = data.daily.temperature_2m_max || [];
+          const mins = data.daily.temperature_2m_min || [];
+          for (let i = 0; i < times.length; i++) {
+            const date = new Date(times[i]);
+            const day = date.toLocaleDateString('en-US', { weekday: 'short' });
+            const max = maxs[i] != null ? maxs[i] : '';
+            const min = mins[i] != null ? mins[i] : '';
+            html += `<li style="padding:0.25rem 0; border-bottom: 1px solid #e1e4e8; font-size:0.9rem;">${day}: <strong>${max}°C</strong> / ${min}°C</li>`;
+          }
+          html += '</ul>';
+        }
+        container.innerHTML = html || 'No weather data available';
       } catch (err) {
         container.textContent = 'Error loading weather';
       }
     }
 
-    // Fetch stock data and display symbol and price
+    // Fetch stock data and display symbol, price and percent change
     async function loadStocks() {
       const container = document.getElementById('stocks-content');
       try {
@@ -242,14 +326,22 @@
         const data = await res.json();
         if (Array.isArray(data)) {
           const list = document.createElement('ul');
+          list.style.paddingLeft = '1.2rem';
+          list.style.margin = '0';
           data.forEach(item => {
-            // Support for multiple data structures
             const symbol = item.symbol || item['01. symbol'] || item['01. Symbol'] || item.ticker;
-            let price = item.price || item['05. price'] || item['05. Price'] || item.close;
-            // Display N/A if the price is null or undefined (e.g. markets closed)
-            const displayPrice = price != null && price !== undefined ? price : 'N/A';
+            const price = item.price != null ? item.price : item['05. price'] || item.close || null;
+            const changePercent = item.changePercent != null ? item.changePercent : null;
             const li = document.createElement('li');
-            li.textContent = `${symbol}: ${displayPrice}`;
+            li.style.marginBottom = '0.4rem';
+            let line = `${symbol}: `;
+            line += price != null ? price.toFixed ? price.toFixed(2) : price : 'N/A';
+            if (changePercent != null) {
+              const arrow = changePercent >= 0 ? '<i class="fas fa-arrow-up" style="color:#238636;margin-right:4px;"></i>' : '<i class="fas fa-arrow-down" style="color:#da3633;margin-right:4px;"></i>';
+              const pct = Math.abs(changePercent).toFixed(2) + '%';
+              line += ` ${arrow}<span style="color:${changePercent >= 0 ? '#238636' : '#da3633'}">${changePercent >= 0 ? '+' : '-'}${pct}</span>`;
+            }
+            li.innerHTML = line;
             list.appendChild(li);
           });
           container.innerHTML = '';
@@ -278,7 +370,6 @@
           articles = data;
         }
         if (articles.length) {
-          // Create a flexible list of news items with images
           const listEl = document.createElement('div');
           listEl.className = 'news-list';
           articles.forEach((item) => {
@@ -310,6 +401,54 @@
       }
     }
 
+    // Fetch events and display weekend suggestions
+    async function loadEvents() {
+      const container = document.getElementById('events-content');
+      try {
+        container.textContent = 'Loading...';
+        const res = await fetch('/api/events');
+        const data = await res.json();
+        const events = Array.isArray(data.events) ? data.events : [];
+        if (events.length) {
+          const listEl = document.createElement('div');
+          listEl.className = 'events-list';
+          events.forEach((ev) => {
+            const item = document.createElement('div');
+            item.className = 'event-item';
+            const titleEl = document.createElement('p');
+            titleEl.className = 'event-title';
+            titleEl.textContent = ev.title;
+            const metaEl = document.createElement('p');
+            metaEl.className = 'event-meta';
+            metaEl.textContent = `${ev.date} • ${ev.venue}`;
+            const descEl = document.createElement('p');
+            descEl.className = 'event-desc';
+            descEl.textContent = ev.description;
+            item.appendChild(titleEl);
+            item.appendChild(metaEl);
+            item.appendChild(descEl);
+            listEl.appendChild(item);
+          });
+          container.innerHTML = '';
+          container.appendChild(listEl);
+        } else {
+          container.textContent = 'No events found';
+        }
+      } catch (err) {
+        container.textContent = 'Error loading events';
+      }
+    }
+
+    // Toggle chat window visibility
+    function toggleChat() {
+      const windowEl = document.getElementById('chat-window');
+      if (windowEl.style.display === 'none' || windowEl.style.display === '') {
+        windowEl.style.display = 'flex';
+      } else {
+        windowEl.style.display = 'none';
+      }
+    }
+
     // Send message to AI chat
     async function sendToAI() {
       const input = document.getElementById('ai-input');
@@ -335,6 +474,7 @@
     loadWeather();
     loadStocks();
     loadNews();
+    loadEvents();
   </script>
 </body>
 </html>
