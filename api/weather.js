@@ -12,26 +12,20 @@ export default async function handler(req, res) {
   const latitude = 48.13743; // Munich
   const longitude = 11.57549;
   try {
-    // Query current weather and hourly forecast in parallel
-    const [currentRes, hourlyRes] = await Promise.all([
-      fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&timezone=Europe%2FBerlin`
-      ),
-      fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,relative_humidity_2m,windspeed_10m&timezone=Europe%2FBerlin`
-      ),
-    ]);
-    const currentData = await currentRes.json();
-    const hourlyData = await hourlyRes.json();
+    // Request current conditions and a 5‑day daily forecast in one call.
+    const weatherRes = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&forecast_days=5&timezone=Europe%2FBerlin`
+    );
+    const weatherData = await weatherRes.json();
     const response = {
-      current:
-        currentData.current_weather || currentData.current || {
-          temperature: null,
-          windspeed: null,
-          wind_direction: null,
-          weathercode: null,
-        },
-      hourly: hourlyData.hourly || hourlyData,
+      city: 'Munich',
+      current: weatherData.current_weather || weatherData.current || {
+        temperature: null,
+        windspeed: null,
+        wind_direction: null,
+        weathercode: null,
+      },
+      daily: weatherData.daily || { time: [], temperature_2m_max: [], temperature_2m_min: [], weathercode: [] },
     };
     res.status(200).json(response);
   } catch (error) {
